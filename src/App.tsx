@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { Menu, X, Home, FileText, QrCode, Info, Settings, Share2, HelpCircle, LogOut, ChevronLeft, ChevronRight, Users, FileCheck, Shield, Download, Sun, Moon, Wallet } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { Menu, X, Home, FileText, QrCode, Info, Settings, Share2, HelpCircle, LogOut, ChevronLeft, ChevronRight, Users, FileCheck, Shield, Download, Sun, Moon, Wallet, User } from 'lucide-react';
 import UploadedDocuments from './components/UploadedDocuments';
 
 function App() {
@@ -7,12 +7,21 @@ function App() {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [showAbout, setShowAbout] = useState(false);
   const [currentView, setCurrentView] = useState<'home' | 'documents'>('home');
+  const [showUserProfile, setShowUserProfile] = useState(false);
+  const userProfileRef = useRef<HTMLDivElement>(null);
   const [darkMode, setDarkMode] = useState(() => {
     if (typeof window !== 'undefined') {
       return localStorage.getItem('darkMode') === 'true';
     }
     return false;
   });
+
+  // Mock user data
+  const user = {
+    name: "John Doe",
+    email: "john.doe@example.com",
+    avatar: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&w=150&q=80"
+  };
 
   useEffect(() => {
     if (darkMode) {
@@ -22,6 +31,18 @@ function App() {
     }
     localStorage.setItem('darkMode', darkMode.toString());
   }, [darkMode]);
+
+  // Close user profile dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (userProfileRef.current && !userProfileRef.current.contains(event.target as Node)) {
+        setShowUserProfile(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   const slides = [
     {
@@ -51,20 +72,17 @@ function App() {
     {
       icon: Users,
       title: "Register Yourself",
-      description: "Create your SecuredDoc Wallet account in minutes",
-      image: "https://images.unsplash.com/photo-1557426272-fc759fdf7a8d?auto=format&fit=crop&w=800&q=80"
+      description: "Create your SecuredDoc Wallet account in minutes"
     },
     {
       icon: Shield,
       title: "Verify Your Identity",
-      description: "Secure verification process for your protection",
-      image: "https://images.unsplash.com/photo-1633265486064-086b219458ec?auto=format&fit=crop&w=800&q=80"
+      description: "Secure verification process for your protection"
     },
     {
       icon: FileCheck,
       title: "Access Documents",
-      description: "Instantly access your verified documents",
-      image: "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=800&q=80"
+      description: "Instantly access your verified documents"
     }
   ];
 
@@ -111,37 +129,78 @@ function App() {
               <h1 className="text-xl font-bold">SecuredDoc Wallet</h1>
             </div>
           </div>
-          <button
-            onClick={() => setDarkMode(!darkMode)}
-            className={`p-2 ${darkMode ? 'hover:bg-gray-700' : 'hover:bg-blue-700'} rounded-full transition-all duration-200 flex items-center gap-2`}
-          >
-            {darkMode ? (
-              <Sun size={24} className="text-yellow-300" />
-            ) : (
-              <Moon size={24} className="text-gray-100" />
-            )}
-          </button>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => setDarkMode(!darkMode)}
+              className={`p-2 ${darkMode ? 'hover:bg-gray-700' : 'hover:bg-blue-700'} rounded-full transition-all duration-200 flex items-center gap-2`}
+            >
+              {darkMode ? (
+                <Sun size={24} className="text-yellow-300" />
+              ) : (
+                <Moon size={24} className="text-gray-100" />
+              )}
+            </button>
+            
+            {/* User Profile Button and Dropdown */}
+            <div className="relative" ref={userProfileRef}>
+              <button
+                onClick={() => setShowUserProfile(!showUserProfile)}
+                className={`p-2 ${darkMode ? 'hover:bg-gray-700' : 'hover:bg-blue-700'} rounded-full transition-all duration-200`}
+              >
+                <User size={24} className="text-white" />
+              </button>
+
+              {/* User Profile Dropdown */}
+              {showUserProfile && (
+                <div className="absolute right-0 mt-2 w-72 bg-white rounded-lg shadow-xl z-50">
+                  <div className="p-4">
+                    <div className="flex flex-col items-center">
+                      <div className="w-20 h-20 rounded-full overflow-hidden mb-3">
+                        <img
+                          src={user.avatar}
+                          alt={user.name}
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                      <h3 className="text-gray-800 font-semibold text-lg">{user.name}</h3>
+                      <p className="text-gray-500 text-sm">{user.email}</p>
+                    </div>
+                    <div className="mt-4 pt-4 border-t border-gray-100">
+                      <button className="w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-50 rounded-md flex items-center gap-2">
+                        <Settings size={18} />
+                        Profile Settings
+                      </button>
+                      <button className="w-full text-left px-4 py-2 text-red-600 hover:bg-red-50 rounded-md flex items-center gap-2">
+                        <LogOut size={18} />
+                        Sign Out
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
         </div>
       </header>
 
       {/* About Modal */}
       {showAbout && (
         <div className="fixed inset-0 backdrop-blur-modal bg-black/30 z-50 flex items-center justify-center p-4">
-          <div className={`bg-white dark:bg-gray-800 rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto shadow-2xl transform transition-all duration-200`}>
+          <div className="bg-white rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto shadow-2xl">
             <div className="sticky top-0 bg-white border-b border-gray-100 p-6 flex justify-between items-center rounded-t-2xl">
               <h2 className="text-2xl font-bold text-gray-800">About SecuredDoc Wallet</h2>
               <button
                 onClick={() => setShowAbout(false)}
                 className="p-2 hover:bg-gray-100 rounded-full transition-colors"
               >
-                <X size={20} />
+                <X size={20} className="text-gray-600" />
               </button>
             </div>
             
-            <div className="p-6 space-y-12">
+            <div className="p-6 space-y-12 bg-white text-gray-800">
               {/* Introduction */}
               <div className="space-y-4">
-                <h3 className="text-xl font-semibold text-gray-800">Your Digital Document Platform</h3>
+                <h3 className="text-xl font-semibold">Your Digital Document Platform</h3>
                 <p className="text-gray-600 leading-relaxed">
                   SecuredDoc Wallet is a premier digital platform for document storage, sharing, and verification. 
                   It provides users with a secure cloud-based storage space for all their important documents, 
@@ -162,22 +221,13 @@ function App() {
 
               {/* Process Steps */}
               <div className="space-y-6">
-                <h3 className="text-xl font-semibold text-gray-800">How It Works</h3>
+                <h3 className="text-xl font-semibold">How It Works</h3>
                 <div className="grid md:grid-cols-3 gap-8">
                   {processSteps.map((step, index) => (
-                    <div key={index} className="bg-white rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-shadow">
-                      <div className="h-48 overflow-hidden">
-                        <img 
-                          src={step.image} 
-                          alt={step.title}
-                          className="w-full h-full object-cover"
-                        />
-                      </div>
-                      <div className="p-6">
-                        <step.icon size={24} className="text-blue-600 mb-4" />
-                        <h4 className="text-lg font-semibold text-gray-800 mb-2">{step.title}</h4>
-                        <p className="text-gray-600">{step.description}</p>
-                      </div>
+                    <div key={index} className="bg-gray-50 rounded-xl p-8 hover:shadow-lg transition-all duration-200">
+                      <step.icon size={32} className="text-blue-600 mb-4" />
+                      <h4 className="text-lg font-semibold mb-2">{step.title}</h4>
+                      <p className="text-gray-600">{step.description}</p>
                     </div>
                   ))}
                 </div>
@@ -185,19 +235,19 @@ function App() {
 
               {/* Additional Information */}
               <div className="bg-blue-50 rounded-xl p-6">
-                <h3 className="text-xl font-semibold text-gray-800 mb-4">Why Choose SecuredDoc Wallet?</h3>
-                <ul className="space-y-3 text-gray-600">
+                <h3 className="text-xl font-semibold mb-4">Why Choose SecuredDoc Wallet?</h3>
+                <ul className="space-y-3">
                   <li className="flex items-center">
                     <Shield className="text-blue-600 mr-3" size={20} />
-                    <span>Secure, encrypted storage for all your documents</span>
+                    <span className="text-gray-700">Secure, encrypted storage for all your documents</span>
                   </li>
                   <li className="flex items-center">
                     <FileCheck className="text-blue-600 mr-3" size={20} />
-                    <span>Verified authentic documents</span>
+                    <span className="text-gray-700">Verified authentic documents</span>
                   </li>
                   <li className="flex items-center">
                     <Share2 className="text-blue-600 mr-3" size={20} />
-                    <span>Easy sharing with other users and organizations</span>
+                    <span className="text-gray-700">Easy sharing with other users and organizations</span>
                   </li>
                 </ul>
               </div>
@@ -304,33 +354,33 @@ function App() {
           <main className="container mx-auto px-4 py-12">
             <div className="grid md:grid-cols-2 gap-8 items-center">
               <div>
-                <h2 className="text-4xl font-bold text-gray-800 mb-4">
+                <h2 className={`text-4xl font-bold mb-4 ${darkMode ? 'text-white' : 'text-gray-800'}`}>
                   Your Digital Document Wallet
                 </h2>
-                <p className="text-lg text-gray-600 mb-6">
+                <p className={`text-lg mb-6 ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
                   Store, access, and share your important documents securely from anywhere, anytime.
                   SecuredDoc Wallet provides a secure cloud-based platform for all your document needs.
                 </p>
                 <div className="space-y-4">
                   <div className="flex items-start space-x-4">
-                    <FileText className="text-blue-600 mt-1 flex-shrink-0" size={24} />
+                    <FileText className="text-blue-500 mt-1 flex-shrink-0" size={24} />
                     <div>
-                      <h3 className="font-semibold text-gray-800">Official Documents</h3>
-                      <p className="text-gray-600">Access your verified documents instantly</p>
+                      <h3 className={`font-semibold ${darkMode ? 'text-white' : 'text-gray-800'}`}>Official Documents</h3>
+                      <p className={`${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>Access your verified documents instantly</p>
                     </div>
                   </div>
                   <div className="flex items-start space-x-4">
-                    <Shield className="text-blue-600 mt-1 flex-shrink-0" size={24} />
+                    <Shield className="text-blue-500 mt-1 flex-shrink-0" size={24} />
                     <div>
-                      <h3 className="font-semibold text-gray-800">Secure Storage</h3>
-                      <p className="text-gray-600">Your documents are encrypted and safely stored</p>
+                      <h3 className={`font-semibold ${darkMode ? 'text-white' : 'text-gray-800'}`}>Secure Storage</h3>
+                      <p className={`${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>Your documents are encrypted and safely stored</p>
                     </div>
                   </div>
                   <div className="flex items-start space-x-4">
-                    <QrCode className="text-blue-600 mt-1 flex-shrink-0" size={24} />
+                    <QrCode className="text-blue-500 mt-1 flex-shrink-0" size={24} />
                     <div>
-                      <h3 className="font-semibold text-gray-800">Quick Share</h3>
-                      <p className="text-gray-600">Share documents instantly using QR codes</p>
+                      <h3 className={`font-semibold ${darkMode ? 'text-white' : 'text-gray-800'}`}>Quick Share</h3>
+                      <p className={`${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>Share documents instantly using QR codes</p>
                     </div>
                   </div>
                 </div>
@@ -344,6 +394,31 @@ function App() {
                   alt="Digital Documents"
                   className="rounded-2xl shadow-xl"
                 />
+              </div>
+            </div>
+
+            {/* Stats Section */}
+            <div className="mt-20 grid md:grid-cols-3 gap-8">
+              {stats.map((stat, index) => (
+                <div key={index} className={`${darkMode ? 'bg-gray-800' : 'bg-gray-50'} rounded-xl p-6 text-center hover:shadow-lg transition-shadow`}>
+                  <stat.icon size={32} className="mx-auto mb-4 text-blue-500" />
+                  <div className={`text-3xl font-bold mb-2 ${darkMode ? 'text-white' : 'text-gray-800'}`}>{stat.value}</div>
+                  <div className={`${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>{stat.label}</div>
+                </div>
+              ))}
+            </div>
+
+            {/* Process Steps */}
+            <div className="mt-20 space-y-6">
+              <h3 className={`text-2xl font-bold mb-8 ${darkMode ? 'text-white' : 'text-gray-800'}`}>How It Works</h3>
+              <div className="grid md:grid-cols-3 gap-8">
+                {processSteps.map((step, index) => (
+                  <div key={index} className={`${darkMode ? 'bg-gray-800' : 'bg-gray-50'} rounded-xl p-8 hover:shadow-lg transition-all duration-200`}>
+                    <step.icon size={32} className="text-blue-500 mb-4" />
+                    <h4 className={`text-lg font-semibold mb-2 ${darkMode ? 'text-white' : 'text-gray-800'}`}>{step.title}</h4>
+                    <p className={`${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>{step.description}</p>
+                  </div>
+                ))}
               </div>
             </div>
           </main>
