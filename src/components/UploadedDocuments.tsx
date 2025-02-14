@@ -23,6 +23,7 @@ export default function UploadedDocuments() {
   const [filter, setFilter] = useState<'all' | 'pending' | 'verified' | 'rejected'>('all');
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [uploadProgress, setUploadProgress] = useState(0);
+  const [showFilterDropdown, setShowFilterDropdown] = useState(false);
 
   const documentTypes = [
     'Identity Proof',
@@ -136,6 +137,11 @@ export default function UploadedDocuments() {
     }, 2000);
   };
 
+  const handleFilterSelect = (newFilter: typeof filter) => {
+    setFilter(newFilter);
+    setShowFilterDropdown(false);
+  };
+
   const getStatusIcon = (status: Document['status']) => {
     switch (status) {
       case 'verified':
@@ -173,6 +179,19 @@ export default function UploadedDocuments() {
     if (filter === 'all') return true;
     return doc.status === filter;
   });
+
+  // Close dropdown when clicking outside
+  React.useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement;
+      if (!target.closest('.filter-dropdown')) {
+        setShowFilterDropdown(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   return (
     <div className="container mx-auto px-4 py-8 space-y-8">
@@ -228,40 +247,43 @@ export default function UploadedDocuments() {
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-2xl font-bold text-gray-800">Self Uploaded Documents</h2>
           <div className="flex items-center gap-4">
-            <div className="relative">
+            <div className="relative filter-dropdown">
               <button
+                onClick={() => setShowFilterDropdown(!showFilterDropdown)}
                 className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
               >
                 <Filter size={20} />
                 Filter by Status
-                <ChevronDown size={16} />
+                <ChevronDown size={16} className={`transform transition-transform ${showFilterDropdown ? 'rotate-180' : ''}`} />
               </button>
-              <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-100 z-10">
-                <button
-                  onClick={() => setFilter('all')}
-                  className="w-full px-4 py-2 text-left hover:bg-gray-50 text-sm"
-                >
-                  All Documents
-                </button>
-                <button
-                  onClick={() => setFilter('pending')}
-                  className="w-full px-4 py-2 text-left hover:bg-gray-50 text-sm"
-                >
-                  Pending Verification
-                </button>
-                <button
-                  onClick={() => setFilter('verified')}
-                  className="w-full px-4 py-2 text-left hover:bg-gray-50 text-sm"
-                >
-                  Verified
-                </button>
-                <button
-                  onClick={() => setFilter('rejected')}
-                  className="w-full px-4 py-2 text-left hover:bg-gray-50 text-sm"
-                >
-                  Rejected
-                </button>
-              </div>
+              {showFilterDropdown && (
+                <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-100 z-10">
+                  <button
+                    onClick={() => handleFilterSelect('all')}
+                    className="w-full px-4 py-2 text-left hover:bg-gray-50 text-sm"
+                  >
+                    All Documents
+                  </button>
+                  <button
+                    onClick={() => handleFilterSelect('pending')}
+                    className="w-full px-4 py-2 text-left hover:bg-gray-50 text-sm"
+                  >
+                    Pending Verification
+                  </button>
+                  <button
+                    onClick={() => handleFilterSelect('verified')}
+                    className="w-full px-4 py-2 text-left hover:bg-gray-50 text-sm"
+                  >
+                    Verified
+                  </button>
+                  <button
+                    onClick={() => handleFilterSelect('rejected')}
+                    className="w-full px-4 py-2 text-left hover:bg-gray-50 text-sm"
+                  >
+                    Rejected
+                  </button>
+                </div>
+              )}
             </div>
             <button
               onClick={() => setShowModal(true)}

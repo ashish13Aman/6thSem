@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Menu, X, Home, FileText, QrCode, Info, Settings, Share2, HelpCircle, LogOut, ChevronLeft, ChevronRight, Users, FileCheck, Shield, Download } from 'lucide-react';
+import { Menu, X, Home, FileText, QrCode, Info, Settings, Share2, HelpCircle, LogOut, ChevronLeft, ChevronRight, Users, FileCheck, Shield, Download, Sun, Moon, Wallet } from 'lucide-react';
 import UploadedDocuments from './components/UploadedDocuments';
 
 function App() {
@@ -7,6 +7,21 @@ function App() {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [showAbout, setShowAbout] = useState(false);
   const [currentView, setCurrentView] = useState<'home' | 'documents'>('home');
+  const [darkMode, setDarkMode] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('darkMode') === 'true';
+    }
+    return false;
+  });
+
+  useEffect(() => {
+    if (darkMode) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+    localStorage.setItem('darkMode', darkMode.toString());
+  }, [darkMode]);
 
   const slides = [
     {
@@ -80,25 +95,39 @@ function App() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className={`min-h-screen ${darkMode ? 'dark bg-gray-900' : 'bg-gray-50'} transition-colors duration-200`}>
       {/* Header */}
-      <header className="bg-blue-600 text-white shadow-lg">
+      <header className={`${darkMode ? 'bg-gray-800' : 'bg-blue-600'} text-white shadow-lg transition-colors duration-200`}>
         <div className="container mx-auto px-4 py-3 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setIsMenuOpen(!isMenuOpen)}
+              className={`p-2 ${darkMode ? 'hover:bg-gray-700' : 'hover:bg-blue-700'} rounded-lg transition-colors`}
+            >
+              <Menu size={24} />
+            </button>
+            <div className="flex items-center gap-2">
+              <Wallet size={24} className="text-white" />
+              <h1 className="text-xl font-bold">SecuredDoc Wallet</h1>
+            </div>
+          </div>
           <button
-            onClick={() => setIsMenuOpen(!isMenuOpen)}
-            className="p-2 hover:bg-blue-700 rounded-lg transition-colors"
+            onClick={() => setDarkMode(!darkMode)}
+            className={`p-2 ${darkMode ? 'hover:bg-gray-700' : 'hover:bg-blue-700'} rounded-full transition-all duration-200 flex items-center gap-2`}
           >
-            <Menu size={24} />
+            {darkMode ? (
+              <Sun size={24} className="text-yellow-300" />
+            ) : (
+              <Moon size={24} className="text-gray-100" />
+            )}
           </button>
-          <h1 className="text-xl font-bold">SecuredDoc Wallet</h1>
-          <div className="w-8" />
         </div>
       </header>
 
       {/* About Modal */}
       {showAbout && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+        <div className="fixed inset-0 backdrop-blur-modal bg-black/30 z-50 flex items-center justify-center p-4">
+          <div className={`bg-white dark:bg-gray-800 rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto shadow-2xl transform transition-all duration-200`}>
             <div className="sticky top-0 bg-white border-b border-gray-100 p-6 flex justify-between items-center rounded-t-2xl">
               <h2 className="text-2xl font-bold text-gray-800">About SecuredDoc Wallet</h2>
               <button
@@ -179,15 +208,17 @@ function App() {
 
       {/* Sliding Menu */}
       <div
-        className={`fixed top-0 left-0 h-full w-64 bg-white shadow-2xl transform transition-transform duration-300 ease-in-out z-50 ${
+        className={`fixed top-0 left-0 h-full w-64 ${
+          darkMode ? 'bg-gray-800' : 'bg-white'
+        } shadow-2xl transform transition-transform duration-300 ease-in-out z-50 ${
           isMenuOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
-        <div className="p-4 bg-blue-600 text-white flex justify-between items-center">
+        <div className={`p-4 ${darkMode ? 'bg-gray-900' : 'bg-blue-600'} text-white flex justify-between items-center`}>
           <span className="font-bold text-lg">Menu</span>
           <button
             onClick={() => setIsMenuOpen(false)}
-            className="p-2 hover:bg-blue-700 rounded-lg transition-colors"
+            className={`p-2 ${darkMode ? 'hover:bg-gray-800' : 'hover:bg-blue-700'} rounded-lg transition-colors`}
           >
             <X size={20} />
           </button>
@@ -200,7 +231,11 @@ function App() {
                 if (item.onClick) item.onClick();
                 setIsMenuOpen(false);
               }}
-              className="flex items-center w-full px-6 py-3 text-gray-700 hover:bg-blue-50 transition-colors"
+              className={`flex items-center w-full px-6 py-3 ${
+                darkMode 
+                  ? 'text-gray-300 hover:bg-gray-700' 
+                  : 'text-gray-700 hover:bg-blue-50'
+              } transition-colors`}
             >
               <item.icon size={20} className="mr-4" />
               <span>{item.text}</span>
@@ -320,7 +355,7 @@ function App() {
       {/* Overlay */}
       {isMenuOpen && (
         <div
-          className="fixed inset-0 bg-black bg-opacity-50 z-40"
+          className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm z-40"
           onClick={() => setIsMenuOpen(false)}
         />
       )}
