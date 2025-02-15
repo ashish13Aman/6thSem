@@ -631,31 +631,6 @@ function App() {
                 />
               </div>
             </div>
-
-            {/* Stats Section */}
-            <div className="mt-20 grid md:grid-cols-3 gap-8">
-              {stats.map((stat, index) => (
-                <div key={index} className={`${darkMode ? 'bg-gray-800' : 'bg-gray-50'} rounded-xl p-6 text-center hover:shadow-lg transition-shadow`}>
-                  <stat.icon size={32} className="mx-auto mb-4 text-blue-500" />
-                  <div className={`text-3xl font-bold mb-2 ${darkMode ? 'text-white' : 'text-gray-800'}`}>{stat.value}</div>
-                  <div className={`${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>{stat.label}</div>
-                </div>
-              ))}
-            </div>
-
-            {/* Process Steps */}
-            <div className="mt-20 space-y-6">
-              <h3 className={`text-2xl font-bold mb-8 ${darkMode ? 'text-white' : 'text-gray-800'}`}>How It Works</h3>
-              <div className="grid md:grid-cols-3 gap-8">
-                {processSteps.map((step, index) => (
-                  <div key={index} className={`${darkMode ? 'bg-gray-800' : 'bg-gray-50'} rounded-xl p-8 hover:shadow-lg transition-all duration-200`}>
-                    <step.icon size={32} className="text-blue-500 mb-4" />
-                    <h4 className={`text-lg font-semibold mb-2 ${darkMode ? 'text-white' : 'text-gray-800'}`}>{step.title}</h4>
-                    <p className={`${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>{step.description}</p>
-                  </div>
-                ))}
-              </div>
-            </div>
           </main>
         </>
       ) : (
