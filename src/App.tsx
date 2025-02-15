@@ -1,48 +1,29 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Menu, X, Home, FileText, QrCode, Info, Settings, Share2, HelpCircle, LogOut, ChevronLeft, ChevronRight, Users, FileCheck, Shield, Download, Sun, Moon, Wallet, User } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Menu, X, Home, FileText, QrCode, Info, Settings, Share2, HelpCircle, LogOut, ChevronLeft, ChevronRight, Users, FileCheck, Shield, Download, Sun, Moon, Wallet, User, Bell, Lock, Globe, Key, Smartphone, Mail, Camera } from 'lucide-react';
 import UploadedDocuments from './components/UploadedDocuments';
 
 function App() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [currentSlide, setCurrentSlide] = useState(0);
   const [showAbout, setShowAbout] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
   const [currentView, setCurrentView] = useState<'home' | 'documents'>('home');
-  const [showUserProfile, setShowUserProfile] = useState(false);
-  const userProfileRef = useRef<HTMLDivElement>(null);
   const [darkMode, setDarkMode] = useState(() => {
     if (typeof window !== 'undefined') {
       return localStorage.getItem('darkMode') === 'true';
     }
     return false;
   });
+  const [currentSettingsTab, setCurrentSettingsTab] = useState<'profile' | 'security' | 'notifications' | 'privacy'>('profile');
+  const [showProfileMenu, setShowProfileMenu] = useState(false);
 
   // Mock user data
-  const user = {
+  const userData = {
     name: "John Doe",
     email: "john.doe@example.com",
-    avatar: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&w=150&q=80"
+    phone: "+1 234 567 8900",
+    avatar: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=facearea&facepad=2&w=256&h=256&q=80"
   };
-
-  useEffect(() => {
-    if (darkMode) {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-    }
-    localStorage.setItem('darkMode', darkMode.toString());
-  }, [darkMode]);
-
-  // Close user profile dropdown when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (userProfileRef.current && !userProfileRef.current.contains(event.target as Node)) {
-        setShowUserProfile(false);
-      }
-    };
-
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
 
   const slides = [
     {
@@ -86,16 +67,32 @@ function App() {
     }
   ];
 
+  const settingsTabs = [
+    { id: 'profile', label: 'Profile', icon: User },
+    { id: 'security', label: 'Security', icon: Lock },
+    { id: 'notifications', label: 'Notifications', icon: Bell },
+    { id: 'privacy', label: 'Privacy', icon: Shield }
+  ];
+
   const menuItems = [
     { icon: Home, text: 'Home', onClick: () => setCurrentView('home') },
     { icon: FileText, text: 'Certificates', onClick: () => setCurrentView('documents') },
     { icon: QrCode, text: 'Scan QR Code' },
     { icon: Info, text: 'About', onClick: () => setShowAbout(true) },
-    { icon: Settings, text: 'Settings' },
+    { icon: Settings, text: 'Settings', onClick: () => setShowSettings(true) },
     { icon: Share2, text: 'Share' },
     { icon: HelpCircle, text: 'Help' },
     { icon: LogOut, text: 'Logout' },
   ];
+
+  useEffect(() => {
+    if (darkMode) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+    localStorage.setItem('darkMode', darkMode.toString());
+  }, [darkMode]);
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -111,6 +108,19 @@ function App() {
   const prevSlide = () => {
     setCurrentSlide((prev) => (prev - 1 + slides.length) % slides.length);
   };
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement;
+      if (!target.closest('.profile-menu')) {
+        setShowProfileMenu(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   return (
     <div className={`min-h-screen ${darkMode ? 'dark bg-gray-900' : 'bg-gray-50'} transition-colors duration-200`}>
@@ -129,10 +139,10 @@ function App() {
               <h1 className="text-xl font-bold">SecuredDoc Wallet</h1>
             </div>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-4">
             <button
               onClick={() => setDarkMode(!darkMode)}
-              className={`p-2 ${darkMode ? 'hover:bg-gray-700' : 'hover:bg-blue-700'} rounded-full transition-all duration-200 flex items-center gap-2`}
+              className={`p-2 ${darkMode ? 'hover:bg-gray-700' : 'hover:bg-blue-700'} rounded-full transition-all duration-200`}
             >
               {darkMode ? (
                 <Sun size={24} className="text-yellow-300" />
@@ -140,48 +150,273 @@ function App() {
                 <Moon size={24} className="text-gray-100" />
               )}
             </button>
-            
-            {/* User Profile Button and Dropdown */}
-            <div className="relative" ref={userProfileRef}>
+            <div className="relative profile-menu">
               <button
-                onClick={() => setShowUserProfile(!showUserProfile)}
-                className={`p-2 ${darkMode ? 'hover:bg-gray-700' : 'hover:bg-blue-700'} rounded-full transition-all duration-200`}
+                onClick={() => setShowProfileMenu(!showProfileMenu)}
+                className="flex items-center gap-2 p-1 rounded-full hover:bg-white/10 transition-colors"
               >
-                <User size={24} className="text-white" />
+                <img
+                  src={userData.avatar}
+                  alt="Profile"
+                  className="w-8 h-8 rounded-full object-cover"
+                />
               </button>
-
-              {/* User Profile Dropdown */}
-              {showUserProfile && (
-                <div className="absolute right-0 mt-2 w-72 bg-white rounded-lg shadow-xl z-50">
-                  <div className="p-4">
-                    <div className="flex flex-col items-center">
-                      <div className="w-20 h-20 rounded-full overflow-hidden mb-3">
-                        <img
-                          src={user.avatar}
-                          alt={user.name}
-                          className="w-full h-full object-cover"
-                        />
-                      </div>
-                      <h3 className="text-gray-800 font-semibold text-lg">{user.name}</h3>
-                      <p className="text-gray-500 text-sm">{user.email}</p>
-                    </div>
-                    <div className="mt-4 pt-4 border-t border-gray-100">
-                      <button className="w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-50 rounded-md flex items-center gap-2">
-                        <Settings size={18} />
-                        Profile Settings
-                      </button>
-                      <button className="w-full text-left px-4 py-2 text-red-600 hover:bg-red-50 rounded-md flex items-center gap-2">
-                        <LogOut size={18} />
-                        Sign Out
-                      </button>
-                    </div>
+              {showProfileMenu && (
+                <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-lg py-1 z-50">
+                  <div className="px-4 py-3 border-b border-gray-200 dark:border-gray-700">
+                    <p className="text-sm font-medium text-gray-900 dark:text-white">{userData.name}</p>
+                    <p className="text-sm text-gray-500 dark:text-gray-400 truncate">{userData.email}</p>
                   </div>
+                  <button
+                    onClick={() => {
+                      setShowSettings(true);
+                      setShowProfileMenu(false);
+                    }}
+                    className="w-full px-4 py-2 text-sm text-left text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+                  >
+                    Settings
+                  </button>
+                  <button
+                    className="w-full px-4 py-2 text-sm text-left text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+                  >
+                    Sign out
+                  </button>
                 </div>
               )}
             </div>
           </div>
         </div>
       </header>
+
+      {/* Settings Modal */}
+      {showSettings && (
+        <div className="fixed inset-0 bg-black/30 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden shadow-2xl">
+            <div className="flex h-full">
+              {/* Sidebar */}
+              <div className="w-64 bg-gray-50 p-6 border-r border-gray-200">
+                <h2 className="text-xl font-bold text-gray-800 mb-6">Settings</h2>
+                <nav className="space-y-1">
+                  {settingsTabs.map((tab) => (
+                    <button
+                      key={tab.id}
+                      onClick={() => setCurrentSettingsTab(tab.id as any)}
+                      className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors ${
+                        currentSettingsTab === tab.id
+                          ? 'bg-blue-50 text-blue-600'
+                          : 'text-gray-600 hover:bg-gray-100'
+                      }`}
+                    >
+                      <tab.icon size={20} />
+                      {tab.label}
+                    </button>
+                  ))}
+                </nav>
+              </div>
+
+              {/* Content */}
+              <div className="flex-1 overflow-y-auto">
+                <div className="p-6 border-b border-gray-200 flex justify-between items-center">
+                  <h3 className="text-xl font-semibold text-gray-800">
+                    {settingsTabs.find(tab => tab.id === currentSettingsTab)?.label}
+                  </h3>
+                  <button
+                    onClick={() => setShowSettings(false)}
+                    className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+                  >
+                    <X size={20} />
+                  </button>
+                </div>
+
+                <div className="p-6">
+                  {currentSettingsTab === 'profile' && (
+                    <div className="space-y-6">
+                      <div className="flex items-center gap-6">
+                        <div className="relative">
+                          <img
+                            src={userData.avatar}
+                            alt="Profile"
+                            className="w-24 h-24 rounded-full object-cover"
+                          />
+                          <button className="absolute bottom-0 right-0 p-2 bg-blue-600 text-white rounded-full hover:bg-blue-700 transition-colors">
+                            <Camera size={16} />
+                          </button>
+                        </div>
+                        <div>
+                          <h4 className="text-lg font-medium text-gray-900">{userData.name}</h4>
+                          <p className="text-gray-500">{userData.email}</p>
+                        </div>
+                      </div>
+
+                      <div className="grid gap-6">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">Full Name</label>
+                          <input
+                            type="text"
+                            defaultValue={userData.name}
+                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">Email</label>
+                          <input
+                            type="email"
+                            defaultValue={userData.email}
+                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">Phone</label>
+                          <input
+                            type="tel"
+                            defaultValue={userData.phone}
+                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {currentSettingsTab === 'security' && (
+                    <div className="space-y-6">
+                      <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                        <div className="flex items-start gap-3">
+                          <Shield className="text-yellow-600 mt-0.5" size={20} />
+                          <div>
+                            <h4 className="text-sm font-medium text-yellow-800">Security Status</h4>
+                            <p className="text-sm text-yellow-700 mt-1">Your account security can be improved</p>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="space-y-4">
+                        <h4 className="text-lg font-medium text-gray-900">Password</h4>
+                        <button className="flex items-center gap-2 text-blue-600 hover:text-blue-700">
+                          <Key size={20} />
+                          Change Password
+                        </button>
+                      </div>
+
+                      <div className="space-y-4">
+                        <h4 className="text-lg font-medium text-gray-900">Two-Factor Authentication</h4>
+                        <div className="flex items-center justify-between py-4 border-t border-gray-200">
+                          <div className="flex items-center gap-3">
+                            <Smartphone size={20} className="text-gray-400" />
+                            <div>
+                              <p className="text-sm font-medium text-gray-900">Authenticator App</p>
+                              <p className="text-sm text-gray-500">Use an authenticator app to generate verification codes</p>
+                            </div>
+                          </div>
+                          <button className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+                            Enable
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {currentSettingsTab === 'notifications' && (
+                    <div className="space-y-6">
+                      <div className="space-y-4">
+                        <h4 className="text-lg font-medium text-gray-900">Email Notifications</h4>
+                        <div className="space-y-4">
+                          <label className="flex items-center gap-3">
+                            <input type="checkbox" className="w-4 h-4 text-blue-600 rounded" defaultChecked />
+                            <span className="text-sm text-gray-700">Document verification updates</span>
+                          </label>
+                          <label className="flex items-center gap-3">
+                            <input type="checkbox" className="w-4 h-4 text-blue-600 rounded" defaultChecked />
+                            <span className="text-sm text-gray-700">Security alerts</span>
+                          </label>
+                          <label className="flex items-center gap-3">
+                            <input type="checkbox" className="w-4 h-4 text-blue-600 rounded" />
+                            <span className="text-sm text-gray-700">Marketing communications</span>
+                          </label>
+                        </div>
+                      </div>
+
+                      <div className="space-y-4">
+                        <h4 className="text-lg font-medium text-gray-900">Push Notifications</h4>
+                        <div className="space-y-4">
+                          <label className="flex items-center gap-3">
+                            <input type="checkbox" className="w-4 h-4 text-blue-600 rounded" defaultChecked />
+                            <span className="text-sm text-gray-700">Document sharing notifications</span>
+                          </label>
+                          <label className="flex items-center gap-3">
+                            <input type="checkbox" className="w-4 h-4 text-blue-600 rounded" defaultChecked />
+                            <span className="text-sm text-gray-700">New feature announcements</span>
+                          </label>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {currentSettingsTab === 'privacy' && (
+                    <div className="space-y-6">
+                      <div className="space-y-4">
+                        <h4 className="text-lg font-medium text-gray-900">Document Visibility</h4>
+                        <div className="space-y-4">
+                          <label className="flex items-center gap-3">
+                            <input
+                              type="radio"
+                              name="visibility"
+                              className="w-4 h-4 text-blue-600"
+                              defaultChecked
+                            />
+                            <div>
+                              <p className="text-sm font-medium text-gray-700">Private</p>
+                              <p className="text-sm text-gray-500">Only you can see your documents</p>
+                            </div>
+                          </label>
+                          <label className="flex items-center gap-3">
+                            <input
+                              type="radio"
+                              name="visibility"
+                              className="w-4 h-4 text-blue-600"
+                            />
+                            <div>
+                              <p className="text-sm font-medium text-gray-700">Selective Sharing</p>
+                              <p className="text-sm text-gray-500">Share documents with specific users or organizations</p>
+                            </div>
+                          </label>
+                        </div>
+                      </div>
+
+                      <div className="space-y-4">
+                        <h4 className="text-lg font-medium text-gray-900">Data Usage</h4>
+                        <div className="space-y-4">
+                          <label className="flex items-center gap-3">
+                            <input type="checkbox" className="w-4 h-4 text-blue-600 rounded" defaultChecked />
+                            <span className="text-sm text-gray-700">Allow usage analytics to improve service</span>
+                          </label>
+                          <label className="flex items-center gap-3">
+                            <input type="checkbox" className="w-4 h-4 text-blue-600 rounded" />
+                            <span className="text-sm text-gray-700">Share anonymous usage data</span>
+                          </label>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                <div className="p-6 border-t border-gray-200">
+                  <div className="flex justify-end gap-4">
+                    <button
+                      onClick={() => setShowSettings(false)}
+                      className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors"
+                    >
+                      Cancel
+                    </button>
+                    <button className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+                      Save Changes
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* About Modal */}
       {showAbout && (
@@ -193,14 +428,14 @@ function App() {
                 onClick={() => setShowAbout(false)}
                 className="p-2 hover:bg-gray-100 rounded-full transition-colors"
               >
-                <X size={20} className="text-gray-600" />
+                <X size={20} />
               </button>
             </div>
             
-            <div className="p-6 space-y-12 bg-white text-gray-800">
+            <div className="p-6 space-y-12">
               {/* Introduction */}
               <div className="space-y-4">
-                <h3 className="text-xl font-semibold">Your Digital Document Platform</h3>
+                <h3 className="text-xl font-semibold text-gray-800">Your Digital Document Platform</h3>
                 <p className="text-gray-600 leading-relaxed">
                   SecuredDoc Wallet is a premier digital platform for document storage, sharing, and verification. 
                   It provides users with a secure cloud-based storage space for all their important documents, 
@@ -221,7 +456,7 @@ function App() {
 
               {/* Process Steps */}
               <div className="space-y-6">
-                <h3 className="text-xl font-semibold">How It Works</h3>
+                <h3 className="text-xl font-semibold text-gray-800">How It Works</h3>
                 <div className="grid md:grid-cols-3 gap-8">
                   {processSteps.map((step, index) => (
                     <div key={index} className="bg-gray-50 rounded-xl p-8 hover:shadow-lg transition-all duration-200">
@@ -380,7 +615,7 @@ function App() {
                     <QrCode className="text-blue-500 mt-1 flex-shrink-0" size={24} />
                     <div>
                       <h3 className={`font-semibold ${darkMode ? 'text-white' : 'text-gray-800'}`}>Quick Share</h3>
-                      <p className={`${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>Share documents instantly using QR codes</p>
+                      <p className={`${darkMode ? 'text-gray-300' : ' text-gray-600'}`}>Share documents instantly using QR codes</p>
                     </div>
                   </div>
                 </div>
