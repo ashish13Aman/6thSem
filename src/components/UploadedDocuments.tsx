@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
-import { X, Upload, FileText, AlertCircle, Check, Loader2, Share2, Filter, ChevronDown, Eye, Clock, XCircle, CheckCircle } from 'lucide-react';
+import { Menu, X, Upload, FileText, File as FilePdf, AlertCircle, Check, Loader2, Share2, Filter, ChevronDown, Eye, Clock, XCircle, CheckCircle } from 'lucide-react';
+import ShareDocumentModal from './ShareDocumentModal';
+import { PDFDocument } from 'pdf-lib';
 
 interface Document {
   id: string;
@@ -10,6 +12,7 @@ interface Document {
   uri?: string;
   feedback?: string;
   progress?: number;
+  hash?: string;
 }
 
 export default function UploadedDocuments() {
@@ -24,6 +27,8 @@ export default function UploadedDocuments() {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [showFilterDropdown, setShowFilterDropdown] = useState(false);
+  const [selectedDocument, setSelectedDocument] = useState<Document | null>(null);
+  const [showShareModal, setShowShareModal] = useState(false);
 
   const documentTypes = [
     'Identity Proof',
@@ -36,18 +41,19 @@ export default function UploadedDocuments() {
   const departmentDocuments: Document[] = [
     {
       id: '1',
-      name: 'Senior Certificate',
+      name: 'Senior_Secondary_Certificate_2015.pdf',
       uploadedDate: '04/07/2015',
       status: 'verified',
       type: 'Educational Certificate',
-      uri: 'in.gov.mahashline-SECER-145164156125510004275'
+      uri: 'in.gov.mahashline-SECER-145164156125510004275',
+      hash: '0x7f9c9f6c8d4b2a1e3d5f7g8h9i0j1k2l3m4n5o6p7q8r9s0t1u2v3w4x5y6z7'
     }
   ];
 
   const documents: Document[] = [
     {
       id: '1',
-      name: 'My Test Document',
+      name: 'National_ID_Card_2023.pdf',
       uploadedDate: '15/05/2015',
       status: 'pending',
       type: 'Identity Proof',
@@ -55,7 +61,7 @@ export default function UploadedDocuments() {
     },
     {
       id: '2',
-      name: 'Experience Award',
+      name: 'Work_Experience_Certificate_2022.pdf',
       uploadedDate: '15/05/2015',
       status: 'rejected',
       type: 'Professional Certificate',
@@ -63,10 +69,11 @@ export default function UploadedDocuments() {
     },
     {
       id: '3',
-      name: 'Award',
+      name: 'Achievement_Award_2021.pdf',
       uploadedDate: '15/05/2015',
       status: 'verified',
-      type: 'Other Documents'
+      type: 'Other Documents',
+      hash: '0x8a9b7c6d5e4f3g2h1i0j9k8l7m6n5o4p3q2r1s0t9u8v7w6x5y4z3a2b1c0d'
     }
   ];
 
@@ -79,8 +86,8 @@ export default function UploadedDocuments() {
     
     if (!selectedFile) {
       newErrors.file = 'Please select a file to upload';
-    } else if (selectedFile.size > 1024 * 1024) {
-      newErrors.file = 'File size must be less than 1MB';
+    } else if (selectedFile.size > 5 * 1024 * 1024) { // Increased to 5MB for PDF conversion
+      newErrors.file = 'File size must be less than 5MB';
     }
     
     if (!description) {
@@ -93,7 +100,40 @@ export default function UploadedDocuments() {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const convertToPDF = async (file: File): Promise<Uint8Array> => {
+    if (file.type === 'application/pdf') {
+      return new Uint8Array(await file.arrayBuffer());
+    }
+
+    const imageBytes = new Uint8Array(await file.arrayBuffer());
+    const pdfDoc = await PDFDocument.create();
+    let image;
+
+    if (file.type.startsWith('image/png')) {
+      image = await pdfDoc.embedPng(imageBytes);
+    } else {
+      image = await pdfDoc.embedJpg(imageBytes);
+    }
+
+    const page = pdfDoc.addPage([image.width, image.height]);
+    page.drawImage(image, {
+      x: 0,
+      y: 0,
+      width: image.width,
+      height: image.height,
+    });
+
+    return await pdfDoc.save();
+  };
+
+  const generateDocumentName = (originalName: string, type: string): string => {
+    const date = new Date().getFullYear();
+    const cleanType = type.replace(/\s+/g, '_');
+    const baseName = originalName.split('.')[0].replace(/\s+/g, '_');
+    return `${cleanType}_${baseName}_${date}.pdf`;
+  };
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       setSelectedFile(file);
@@ -103,38 +143,52 @@ export default function UploadedDocuments() {
   };
 
   const handleUpload = async () => {
-    if (!validateForm()) return;
+    if (!validateForm() || !selectedFile || !documentType) return;
 
     setIsLoading(true);
     setUploadProgress(0);
     
-    // Simulate upload progress
-    const interval = setInterval(() => {
-      setUploadProgress(prev => {
-        if (prev >= 100) {
-          clearInterval(interval);
-          return 100;
-        }
-        return prev + 10;
+    try {
+      // Convert to PDF
+      const pdfBytes = await convertToPDF(selectedFile);
+      
+      // Simulate upload progress
+      const interval = setInterval(() => {
+        setUploadProgress(prev => {
+          if (prev >= 100) {
+            clearInterval(interval);
+            return 100;
+          }
+          return prev + 10;
+        });
+      }, 200);
+      
+      // Create a new PDF file with the converted bytes
+      const pdfBlob = new Blob([pdfBytes], { type: 'application/pdf' });
+      const pdfFile = new File([pdfBlob], generateDocumentName(selectedFile.name, documentType), {
+        type: 'application/pdf',
       });
-    }, 200);
-    
-    // Simulate upload delay
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    
-    setIsLoading(false);
-    setIsSuccess(true);
-    
-    // Reset form after 2 seconds
-    setTimeout(() => {
-      setIsSuccess(false);
-      setShowModal(false);
-      setDocumentType('');
-      setSelectedFile(null);
-      setDescription('');
-      setPreviewUrl(null);
-      setUploadProgress(0);
-    }, 2000);
+
+      // Simulate upload delay
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      setIsLoading(false);
+      setIsSuccess(true);
+      
+      // Reset form after 2 seconds
+      setTimeout(() => {
+        setIsSuccess(false);
+        setShowModal(false);
+        setDocumentType('');
+        setSelectedFile(null);
+        setDescription('');
+        setPreviewUrl(null);
+        setUploadProgress(0);
+      }, 2000);
+    } catch (error) {
+      setErrors({ file: 'Failed to convert and upload file. Please try again.' });
+      setIsLoading(false);
+    }
   };
 
   const handleFilterSelect = (newFilter: typeof filter) => {
@@ -175,6 +229,11 @@ export default function UploadedDocuments() {
     }
   };
 
+  const handleShare = (doc: Document) => {
+    setSelectedDocument(doc);
+    setShowShareModal(true);
+  };
+
   const filteredDocuments = documents.filter(doc => {
     if (filter === 'all') return true;
     return doc.status === filter;
@@ -207,7 +266,7 @@ export default function UploadedDocuments() {
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">URI</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Issue Date</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Share</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
@@ -216,7 +275,7 @@ export default function UploadedDocuments() {
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{index + 1}</td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center">
-                      <FileText size={20} className="text-gray-400 mr-2" />
+                      <FilePdf size={20} className="text-red-500 mr-2" />
                       <span className="text-sm text-gray-900">{doc.name}</span>
                     </div>
                   </td>
@@ -231,9 +290,18 @@ export default function UploadedDocuments() {
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <button className="text-blue-600 hover:text-blue-800">
-                      <Share2 size={20} />
-                    </button>
+                    <div className="flex items-center space-x-3">
+                      <button className="text-blue-600 hover:text-blue-800">
+                        <Eye size={20} />
+                      </button>
+                      <button
+                        onClick={() => handleShare(doc)}
+                        className="text-blue-600 hover:text-blue-800"
+                        title="Share Document"
+                      >
+                        <Share2 size={20} />
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -313,7 +381,7 @@ export default function UploadedDocuments() {
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{index + 1}</td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center">
-                      <FileText size={20} className="text-gray-400 mr-2" />
+                      <FilePdf size={20} className="text-red-500 mr-2" />
                       <span className="text-sm text-gray-900">{doc.name}</span>
                     </div>
                   </td>
@@ -340,13 +408,19 @@ export default function UploadedDocuments() {
                       )}
                     </div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    <button className="text-blue-600 hover:text-blue-800 mr-2">
-                      <Eye size={20} />
-                    </button>
-                    <button className="text-blue-600 hover:text-blue-800">
-                      <Share2 size={20} />
-                    </button>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="flex items-center space-x-3">
+                      <button className="text-blue-600 hover:text-blue-800">
+                        <Eye size={20} />
+                      </button>
+                      <button
+                        onClick={() => handleShare(doc)}
+                        className="text-blue-600 hover:text-blue-800"
+                        title="Share Document"
+                      >
+                        <Share2 size={20} />
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -357,7 +431,7 @@ export default function UploadedDocuments() {
 
       {/* Upload Modal */}
       {showModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
           <div className="bg-white rounded-2xl max-w-4xl w-full">
             <div className="p-6 border-b border-gray-100">
               <div className="flex justify-between items-center">
@@ -415,7 +489,10 @@ export default function UploadedDocuments() {
                     >
                       <Upload size={24} className="text-gray-400 mb-2" />
                       <span className="text-sm text-gray-500">
-                        {selectedFile ? selectedFile.name : 'Click to upload (Max: 1MB)'}
+                        {selectedFile ? selectedFile.name : 'Click to upload (Max: 5MB)'}
+                      </span>
+                      <span className="text-xs text-gray-400 mt-1">
+                        Supported formats: PDF, PNG, JPG
                       </span>
                     </label>
                   </div>
@@ -496,7 +573,7 @@ export default function UploadedDocuments() {
                 {isLoading ? (
                   <>
                     <Loader2 size={20} className="animate-spin" />
-                    Uploading...
+                    Converting and Uploading...
                   </>
                 ) : isSuccess ? (
                   <>
@@ -513,6 +590,18 @@ export default function UploadedDocuments() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Share Document Modal */}
+      {selectedDocument && (
+        <ShareDocumentModal
+          isOpen={showShareModal}
+          onClose={() => {
+            setShowShareModal(false);
+            setSelectedDocument(null);
+          }}
+          document={selectedDocument}
+        />
       )}
     </div>
   );
