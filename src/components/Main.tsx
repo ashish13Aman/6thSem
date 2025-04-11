@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import  { useState, useEffect } from 'react';
 import { ChevronLeft, ChevronRight, FileText, Shield, QrCode, Users, FileCheck, Download } from 'lucide-react';
 
 export default function Main() {

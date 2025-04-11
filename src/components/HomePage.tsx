@@ -4,22 +4,22 @@ import {
   X,
   Home,
   FileText,
-  QrCode,
   Info,
   Settings,
-  Share2,
-  HelpCircle,
   LogOut,
   Sun,
   Moon,
   Wallet,
+  Share2,
 } from "lucide-react";
 import Main from "./Main";
 import UploadedDocuments from "./UploadedDocuments";
 import AboutModal from "./About";
 import SettingsModal from "./Settings";
+import { useNavigate } from "react-router-dom";
 
 export default function HomePage() {
+  const navigate = useNavigate();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [showAbout, setShowAbout] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
@@ -50,11 +50,13 @@ export default function HomePage() {
       text: "Certificates",
       onClick: () => setCurrentView("documents"),
     },
-    { icon: QrCode, text: "Scan QR Code" },
+    {
+      icon: Share2,
+      text: "Shared With Me",
+      onClick: () => navigate("/shared"),
+    },
     { icon: Info, text: "About", onClick: () => setShowAbout(true) },
     { icon: Settings, text: "Settings", onClick: () => setShowSettings(true) },
-    { icon: Share2, text: "Share" },
-    { icon: HelpCircle, text: "Help" },
     { icon: LogOut, text: "Logout" },
   ];
 

@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import  { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { Shield, User, Users, Sun, Moon, ChevronRight, Lock } from 'lucide-react';
 
 export default function LoginPage() {
@@ -18,9 +18,9 @@ export default function LoginPage() {
 
   const handleLogin = () => {
     if (selectedRole === 'admin') {
-      navigate('/admin');
+      navigate('/admin-login');
     } else {
-      navigate('/dashboard');
+      navigate('/user-login');
     }
   };
 
