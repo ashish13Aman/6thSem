@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Mail, Lock, Eye, EyeOff, ArrowRight, Wallet } from 'lucide-react';
+import { Mail, ArrowRight, Wallet } from 'lucide-react';
 
 interface LoginFormData {
   walletAddress: string;
@@ -120,13 +120,7 @@ export default function UserAuth() {
             </button>
           </form>
 
-          {/* Registration Link */}
-          <p className="mt-6 text-center text-gray-600">
-            Don't have an account?{' '}
-            <a href="/register" className="text-blue-600 hover:text-blue-800 font-medium">
-              Register here
-            </a>
-          </p>
+          
         </div>
       </div>
     </div>

@@ -2,6 +2,64 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Mail, User, Wallet, Shield, ArrowRight, Loader2 } from 'lucide-react';
 import { useWallet } from '../hooks/useWallet';
+import { motion } from 'framer-motion';
+import { useCallback } from 'react';
+import Particles from 'react-particles';
+import { loadSlim } from 'tsparticles-slim';
+import {
+  Box,
+  Button,
+  Card,
+  CardContent,
+  TextField,
+  Typography,
+  ToggleButton,
+  ToggleButtonGroup,
+  styled,
+  alpha,
+  InputAdornment,
+  CircularProgress
+} from '@mui/material';
+
+const GlassCard = styled(Card)(({ theme }) => ({
+  background: alpha('#ffffff', 0.7),
+  backdropFilter: 'blur(10px)',
+  borderRadius: 24,
+  boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
+  transition: 'transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out',
+  '&:hover': {
+    transform: 'translateY(-4px)',
+    boxShadow: '0 12px 48px rgba(0, 0, 0, 0.12)',
+  },
+}));
+
+const StyledTextField = styled(TextField)(({ theme }) => ({
+  '& .MuiOutlinedInput-root': {
+    borderRadius: 12,
+    background: alpha('#ffffff', 0.5),
+    transition: 'all 0.3s ease-in-out',
+    '&:hover': {
+      background: alpha('#ffffff', 0.7),
+    },
+    '&.Mui-focused': {
+      background: alpha('#ffffff', 0.9),
+    },
+  },
+}));
+
+const StyledToggleButton = styled(ToggleButton)(({ theme }) => ({
+  borderRadius: 12,
+  padding: '16px',
+  flex: 1,
+  transition: 'all 0.3s ease-in-out',
+  '&.Mui-selected': {
+    background: 'linear-gradient(135deg, #3b82f6 0%, #4f46e5 100%)',
+    color: '#ffffff',
+    '&:hover': {
+      background: 'linear-gradient(135deg, #2563eb 0%, #4338ca 100%)',
+    },
+  },
+}));
 
 interface RegisterFormData {
   fullName: string;
@@ -21,6 +79,10 @@ export default function Register() {
   });
   const [errors, setErrors] = useState<Partial<RegisterFormData>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const particlesInit = useCallback(async (engine: any) => {
+    await loadSlim(engine);
+  }, []);
 
   useEffect(() => {
     if (account) {
@@ -87,160 +149,252 @@ export default function Register() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 flex items-center justify-center p-4">
-      <div className="max-w-xl w-full">
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 text-white mb-4">
-            <Shield size={32} />
-          </div>
-          <h2 className="text-3xl font-bold text-gray-900">Create Your Account</h2>
-          <p className="text-gray-600 mt-2">Join SecureDoc to manage your documents securely</p>
-        </div>
+    <Box
+      sx={{
+        minHeight: '100vh',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: 4,
+        background: 'linear-gradient(135deg, #1e293b 0%, #0f172a 100%)',
+        position: 'relative',
+        overflow: 'hidden',
+      }}
+    >
+      <Particles
+        id="tsparticles"
+        init={particlesInit}
+        options={{
+          background: {
+            color: {
+              value: "transparent",
+            },
+          },
+          fpsLimit: 120,
+          particles: {
+            color: {
+              value: "#ffffff",
+            },
+            links: {
+              color: "#ffffff",
+              distance: 150,
+              enable: true,
+              opacity: 0.2,
+              width: 1,
+            },
+            move: {
+              enable: true,
+              outModes: {
+                default: "bounce",
+              },
+              random: false,
+              speed: 1,
+              straight: false,
+            },
+            number: {
+              density: {
+                enable: true,
+                area: 800,
+              },
+              value: 80,
+            },
+            opacity: {
+              value: 0.2,
+            },
+            shape: {
+              type: "circle",
+            },
+            size: {
+              value: { min: 1, max: 3 },
+            },
+          },
+          detectRetina: true,
+        }}
+      />
 
-        <div className="bg-white/80 backdrop-blur-lg rounded-2xl shadow-xl p-8">
-          <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Role Selection */}
-            <div className="grid grid-cols-2 gap-4">
-              <button
-                type="button"
-                onClick={() => setFormData(prev => ({ ...prev, role: 'user' }))}
-                className={`p-4 rounded-lg border-2 transition-all ${
-                  formData.role === 'user'
-                    ? 'border-blue-500 bg-blue-50'
-                    : 'border-gray-200 hover:border-blue-200'
-                }`}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6 }}
+        style={{ width: '100%', maxWidth: '600px', position: 'relative', zIndex: 1 }}
+      >
+        <GlassCard>
+          <CardContent sx={{ p: 4 }}>
+            <Box textAlign="center" mb={4}>
+              <motion.div
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                transition={{ type: "spring", stiffness: 260, damping: 20 }}
               >
-                <User size={24} className={`mx-auto mb-2 ${formData.role === 'user' ? 'text-blue-500' : 'text-gray-400'}`} />
-                <p className={`text-sm font-medium ${formData.role === 'user' ? 'text-blue-700' : 'text-gray-600'}`}>User</p>
-              </button>
-              
-              <button
-                type="button"
-                onClick={() => setFormData(prev => ({ ...prev, role: 'admin' }))}
-                className={`p-4 rounded-lg border-2 transition-all ${
-                  formData.role === 'admin'
-                    ? 'border-purple-500 bg-purple-50'
-                    : 'border-gray-200 hover:border-purple-200'
-                }`}
-              >
-                <Shield size={24} className={`mx-auto mb-2 ${formData.role === 'admin' ? 'text-purple-500' : 'text-gray-400'}`} />
-                <p className={`text-sm font-medium ${formData.role === 'admin' ? 'text-purple-700' : 'text-gray-600'}`}>Admin</p>
-              </button>
-            </div>
+                <Shield size={48} className="mx-auto mb-4 text-blue-600" />
+              </motion.div>
+              <Typography variant="h4" component="h1" gutterBottom fontWeight="bold">
+                Create Your Account
+              </Typography>
+              <Typography variant="body1" color="text.secondary">
+                Join SecureDoc to manage your documents securely
+              </Typography>
+            </Box>
 
-            {/* Full Name */}
-            <div>
-              <div className="relative">
-                <User className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
-                <input
-                  type="text"
+            <form onSubmit={handleSubmit}>
+              <Box mb={3}>
+                <ToggleButtonGroup
+                  value={formData.role}
+                  exclusive
+                  onChange={(e, newRole) => newRole && setFormData(prev => ({ ...prev, role: newRole }))}
+                  fullWidth
+                >
+                  <StyledToggleButton value="user">
+                    <Box display="flex" flexDirection="column" alignItems="center" gap={1}>
+                      <User size={24} />
+                      <Typography variant="body2">User</Typography>
+                    </Box>
+                  </StyledToggleButton>
+                  <StyledToggleButton value="admin">
+                    <Box display="flex" flexDirection="column" alignItems="center" gap={1}>
+                      <Shield size={24} />
+                      <Typography variant="body2">Admin</Typography>
+                    </Box>
+                  </StyledToggleButton>
+                </ToggleButtonGroup>
+              </Box>
+
+              <Box mb={3}>
+                <StyledTextField
+                  fullWidth
                   name="fullName"
                   value={formData.fullName}
                   onChange={handleInputChange}
                   placeholder="Full Name"
-                  className={`w-full pl-10 pr-4 py-3 rounded-lg border ${
-                    errors.fullName ? 'border-red-500' : 'border-gray-200'
-                  } focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white/50`}
+                  error={!!errors.fullName}
+                  helperText={errors.fullName}
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <User size={20} className="text-gray-400" />
+                      </InputAdornment>
+                    ),
+                  }}
                 />
-              </div>
-              {errors.fullName && (
-                <p className="mt-1 text-sm text-red-500">{errors.fullName}</p>
-              )}
-            </div>
+              </Box>
 
-            {/* Email */}
-            <div>
-              <div className="relative">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
-                <input
+              <Box mb={3}>
+                <StyledTextField
+                  fullWidth
                   type="email"
                   name="email"
                   value={formData.email}
                   onChange={handleInputChange}
                   placeholder="Email Address"
-                  className={`w-full pl-10 pr-4 py-3 rounded-lg border ${
-                    errors.email ? 'border-red-500' : 'border-gray-200'
-                  } focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white/50`}
+                  error={!!errors.email}
+                  helperText={errors.email}
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <Mail size={20} className="text-gray-400" />
+                      </InputAdornment>
+                    ),
+                  }}
                 />
-              </div>
-              {errors.email && (
-                <p className="mt-1 text-sm text-red-500">{errors.email}</p>
-              )}
-            </div>
+              </Box>
 
-            {/* Wallet Address */}
-            <div>
-              <div className="relative">
-                <Wallet className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
-                <input
-                  type="text"
-                  name="walletAddress"
-                  value={formData.walletAddress}
-                  readOnly
-                  placeholder="Connect your wallet"
-                  className="w-full pl-10 pr-4 py-3 rounded-lg border border-gray-200 bg-gray-50 cursor-not-allowed"
-                />
-              </div>
-              <button
-                type="button"
-                onClick={connectWallet}
-                disabled={isConnecting}
-                className="mt-2 w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 
-                  transition-colors flex items-center justify-center gap-2 disabled:bg-blue-400"
+              <Box mb={3}>
+                <Box display="flex" gap={2}>
+                  <StyledTextField
+                    fullWidth
+                    name="walletAddress"
+                    value={formData.walletAddress}
+                    placeholder="Connect your wallet"
+                    InputProps={{
+                      readOnly: true,
+                      startAdornment: (
+                        <InputAdornment position="start">
+                          <Wallet size={20} className="text-gray-400" />
+                        </InputAdornment>
+                      ),
+                    }}
+                  />
+                  <Button
+                    variant="contained"
+                    onClick={connectWallet}
+                    disabled={isConnecting}
+                    sx={{
+                      borderRadius: 3,
+                      background: 'linear-gradient(135deg, #3b82f6 0%, #4f46e5 100%)',
+                      '&:hover': {
+                        background: 'linear-gradient(135deg, #2563eb 0%, #4338ca 100%)',
+                      },
+                      minWidth: '160px',
+                    }}
+                  >
+                    {isConnecting ? (
+                      <>
+                        <CircularProgress size={20} color="inherit" sx={{ mr: 1 }} />
+                        Connecting...
+                      </>
+                    ) : (
+                      <>
+                        <Wallet size={20} className="mr-2" />
+                        Connect
+                      </>
+                    )}
+                  </Button>
+                </Box>
+                {walletError && (
+                  <Typography color="error" variant="caption" sx={{ mt: 1, display: 'block' }}>
+                    {walletError}
+                  </Typography>
+                )}
+              </Box>
+
+              <Button
+                type="submit"
+                variant="contained"
+                fullWidth
+                disabled={isSubmitting || !account}
+                sx={{
+                  borderRadius: 3,
+                  py: 1.5,
+                  background: formData.role === 'admin'
+                    ? 'linear-gradient(135deg, #9333ea 0%, #6366f1 100%)'
+                    : 'linear-gradient(135deg, #3b82f6 0%, #4f46e5 100%)',
+                  '&:hover': {
+                    background: formData.role === 'admin'
+                      ? 'linear-gradient(135deg, #7e22ce 0%, #4f46e5 100%)'
+                      : 'linear-gradient(135deg, #2563eb 0%, #4338ca 100%)',
+                  },
+                }}
               >
-                {isConnecting ? (
+                {isSubmitting ? (
                   <>
-                    <Loader2 size={20} className="animate-spin" />
-                    Connecting...
+                    <CircularProgress size={20} color="inherit" sx={{ mr: 1 }} />
+                    Creating Account...
                   </>
                 ) : (
                   <>
-                    <Wallet size={20} />
-                    Connect Wallet
+                    Create Account
+                    <ArrowRight size={20} className="ml-2" />
                   </>
                 )}
-              </button>
-              {walletError && (
-                <p className="mt-1 text-sm text-red-500">{walletError}</p>
-              )}
-            </div>
+              </Button>
 
-            {/* Submit Button */}
-            <button
-              type="submit"
-              disabled={isSubmitting || !account}
-              className={`w-full py-3 rounded-lg text-white flex items-center justify-center gap-2 transition-all duration-300 ${
-                formData.role === 'admin'
-                  ? 'bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700'
-                  : 'bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700'
-              } disabled:opacity-50 disabled:cursor-not-allowed`}
-            >
-              {isSubmitting ? (
-                <>
-                  <Loader2 size={20} className="animate-spin" />
-                  Creating Account...
-                </>
-              ) : (
-                <>
-                  Create Account
-                  <ArrowRight size={20} />
-                </>
-              )}
-            </button>
-          </form>
-
-          {/* Login Link */}
-          <p className="mt-6 text-center text-gray-600">
-            Already have an account?{' '}
-            <a
-              href={formData.role === 'admin' ? '/admin-login' : '/user-login'}
-              className="text-blue-600 hover:text-blue-800 font-medium"
-            >
-              Sign in
-            </a>
-          </p>
-        </div>
-      </div>
-    </div>
+              <Box mt={3} textAlign="center">
+                <Typography variant="body2" color="text.secondary">
+                  Already have an account?{' '}
+                  <Button
+                    component="a"
+                    href="/login"
+                    color="primary"
+                    sx={{ textTransform: 'none', fontWeight: 'medium' }}
+                  >
+                    Sign in
+                  </Button>
+                </Typography>
+              </Box>
+            </form>
+          </CardContent>
+        </GlassCard>
+      </motion.div>
+    </Box>
   );
 }
